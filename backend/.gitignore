@@ -5,6 +5,7 @@ application-*.yml
 build.gradle.kts
 pom.xml
 .idea/
+docker-compose.yml
 
 HELP.md
 .gradle
