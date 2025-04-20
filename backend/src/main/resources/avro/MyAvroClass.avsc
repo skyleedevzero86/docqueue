@@ -1,10 +1,11 @@
 {
-    "type": "record",
-    "name": "MyAvroClass",
-    "namespace": "com.docqueue.global.datas.avro",
-    "fields": [
-    {"name": "id", "type": "string"},
+  "namespace": "com.docqueue.global.datas.avro",
+  "type": "record",
+  "name": "MyAvroClass",
+  "fields": [
+    {"name": "id", "type": "int"},
+    {"name": "name", "type": "string"},
     {"name": "message", "type": "string"},
     {"name": "timestamp", "type": "long"}
-    ]
+  ]
 }

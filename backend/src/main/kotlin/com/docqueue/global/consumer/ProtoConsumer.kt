@@ -1,6 +1,6 @@
 package com.docqueue.global.consumer
 
-import com.docqueue.global.datas.proto.MyProtoMessage
+import com.docqueue.global.datas.proto.MyProtoMessages
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
 
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 class ProtoConsumer {
     @KafkaListener(topics = ["my-topic"], groupId = "my-group")
     fun listen(bytes: ByteArray) {
-        val message = MyProtoMessage.parseFrom(bytes)
+        val message = MyProtoMessages.MyProtoMessage.parseFrom(bytes)
         println("Received message: $message")
     }
 }
