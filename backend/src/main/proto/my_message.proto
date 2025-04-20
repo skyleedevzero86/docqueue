@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option java_package = "com.docqueue.global.datas.proto";
+option java_outer_classname = "MyProtoMessageOuterClass";
+option java_multiple_files = true;
+
+message MyProtoMessage {
+  string id = 1;
+  string content = 2;
+  int64 timestamp = 3;
+}
