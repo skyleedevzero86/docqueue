@@ -1,4 +1,4 @@
-package com.docqueue.domain.home.service
+package com.docqueue.global.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

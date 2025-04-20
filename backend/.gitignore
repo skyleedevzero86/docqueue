@@ -6,6 +6,7 @@ build.gradle.kts
 pom.xml
 .idea/
 docker-compose.yml
+src/test/kotlin/com/docqueue/dbconnection/
 
 HELP.md
 .gradle

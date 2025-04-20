@@ -7,6 +7,8 @@ import com.docqueue.domain.home.service.UserId
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
+import kotlinx.coroutines.reactive.awaitFirstOrNull
+
 
 @Component
 class QueueClient(
@@ -33,4 +35,34 @@ class QueueClient(
             .bodyToMono(AllowedUserResponse::class.java)
             .awaitSingle()
     }
+
+    suspend fun addUser(queue: QueueName, userId: UserId, token: Token) {
+        webClient.post()
+            .uri { uriBuilder ->
+                uriBuilder
+                    .path("/api/v1/queue/add")
+                    .queryParam("queue", queue)
+                    .queryParam("user-id", userId)
+                    .queryParam("token", token)
+                    .build()
+            }
+            .retrieve()
+            .bodyToMono(Void::class.java)
+            .awaitFirstOrNull()
+    }
+
+    suspend fun allow(queue: QueueName, userId: UserId) {
+        webClient.post()
+            .uri { uriBuilder ->
+                uriBuilder
+                    .path("/api/v1/queue/allow")
+                    .queryParam("queue", queue)
+                    .queryParam("user-id", userId)
+                    .build()
+            }
+            .retrieve()
+            .bodyToMono(Void::class.java)
+            .awaitFirstOrNull()
+    }
+
 }
