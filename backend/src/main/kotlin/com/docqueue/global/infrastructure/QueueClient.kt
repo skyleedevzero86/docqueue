@@ -12,6 +12,13 @@ import org.springframework.web.reactive.function.client.WebClient
 class QueueClient(
     private val webClient: WebClient
 ) {
+    /**
+     * 대기열 접근 가능 여부를 외부 API로 확인
+     * @param queue 대기열 이름
+     * @param userId 사용자 ID
+     * @param token 인증 토큰
+     * @return AllowedUserResponse (입장 가능 여부)
+     */
     suspend fun verifyQueueAccess(queue: QueueName, userId: UserId, token: Token): AllowedUserResponse {
         return webClient.get()
             .uri { uriBuilder ->

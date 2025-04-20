@@ -8,8 +8,9 @@ import com.docqueue.global.infrastructure.QueueClient
 
 @Service
 class QueueServiceImpl(
-    private val queueClient: QueueClient,
-    //private val userQueueService: UserQueueService
+    private val queueClient: QueueClient
+    //,
+   // private val userQueueService: UserQueueService
 ) : QueueService {
 
     override fun checkAccess(queue: QueueName, userId: UserId, token: Token): Flow<UserQueue> = flow {

@@ -1,5 +1,6 @@
 package com.docqueue.global.config
 
+import com.docqueue.global.datas.avro.MyAvroClass
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.apache.kafka.common.serialization.StringSerializer
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.core.ProducerFactory
+import io.confluent.kafka.serializers.KafkaAvroSerializer
 
 @Configuration
 class KafkaConfig {
@@ -27,7 +29,7 @@ class KafkaConfig {
     }
 
     // Avro 시리얼라이저를 사용하는 기존 구성도 유지
-    /*
+
     @Bean
     fun avroKafkaTemplate(): KafkaTemplate<String, MyAvroClass> {
         return KafkaTemplate(avroProducerFactory())
@@ -43,5 +45,5 @@ class KafkaConfig {
         )
         return DefaultKafkaProducerFactory(config)
     }
-    */
+
 }
