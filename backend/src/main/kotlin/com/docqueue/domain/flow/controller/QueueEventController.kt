@@ -1,10 +1,11 @@
 package com.docqueue.domain.flow.controller
 
 import com.docqueue.domain.flow.dto.QueueUpdateEvent
+import com.docqueue.domain.flow.model.QueueStatus
 import com.docqueue.domain.flow.service.UserQueueService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.reactor.asFlux // asFlux 임포트 추가
+import kotlinx.coroutines.reactor.asFlux
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -28,7 +29,13 @@ class QueueEventController(
     ): Flux<QueueUpdateEvent> {
         return Flux.interval(Duration.ofSeconds(1))
             .flatMap { userQueueService.getQueueStatus(queue, userId) }
-            .map { status -> QueueUpdateEvent(status.first, status.second, status.third) }
+            .map { status ->
+                QueueUpdateEvent(
+                    status.userRank,            // first 대신 userRank 속성 사용
+                    status.totalQueueSize,      // second 대신 totalQueueSize 속성 사용
+                    status.progress             // third 대신 progress 속성 사용
+                )
+            }
             .distinctUntilChanged()
     }
 
@@ -42,7 +49,13 @@ class QueueEventController(
     ): Flux<QueueUpdateEvent> {
         val statusFlow: Flow<QueueUpdateEvent> = userQueueService
             .getQueueStatusAsFlow(queue, userId)
-            .map { status -> QueueUpdateEvent(status.first, status.second, status.third) }
+            .map { status ->
+                QueueUpdateEvent(
+                    status.userRank,            // first 대신 userRank 속성 사용
+                    status.totalQueueSize,      // second 대신 totalQueueSize 속성 사용
+                    status.progress             // third 대신 progress 속성 사용
+                )
+            }
 
         return statusFlow.asFlux()
     }

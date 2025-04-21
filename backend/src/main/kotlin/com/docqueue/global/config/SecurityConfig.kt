@@ -13,12 +13,13 @@ class SecurityConfig {
     @Bean
     fun securityWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http
-            .csrf().disable()
-            .authorizeExchange()
-            .pathMatchers("/api/v1/queue/**").permitAll()
-            .pathMatchers("/waiting-room").permitAll()
-            .anyExchange().authenticated()
-            .and()
+            .csrf { csrf -> csrf.disable() }
+            .authorizeExchange { exchanges ->
+                exchanges
+                    .pathMatchers("/api/v1/queue/**").permitAll()
+                    .pathMatchers("/waiting-room").permitAll()
+                    .anyExchange().authenticated()
+            }
             .build()
     }
 }
