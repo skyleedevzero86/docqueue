@@ -1,18 +1,22 @@
 package com.docqueue.domain.flow.service
 
+import com.docqueue.domain.flow.model.QueueStatus
+import com.docqueue.domain.flow.repository.UserQueueRepository
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
-import java.util.UUID
-import com.docqueue.domain.flow.repository.UserQueueRepository
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 
 @Service
 class UserQueueService(
     private val userQueueRepository: UserQueueRepository,
-    private val tokenGenerator: TokenGenerator = TokenGenerator { UUID.randomUUID().toString() }
+    private val tokenGenerator: TokenGenerator
 ) {
+
     // 순수 함수: 대기열에 사용자 등록
     suspend fun registerWaitQueue(queue: QueueName, userId: UserId): Mono<WaitingNumber> {
         return userQueueRepository.findWaitingOrder(queue)
@@ -59,7 +63,9 @@ class UserQueueService(
     private fun isUserAllowed(queue: QueueName, userId: UserId): Mono<Boolean> {
         return userQueueRepository.findAllowedOrder(queue)
             .zipWith(userQueueRepository.findUserWaitOrder(queue, userId))
-            .map { (allowedOrder, userOrder) ->
+            .map { tuple ->
+                val allowedOrder = tuple.t1
+                val userOrder = tuple.t2
                 userOrder > 0 && userOrder <= allowedOrder
             }
     }
@@ -74,16 +80,17 @@ class UserQueueService(
                 val waitingOrder = tuple.t1.t2
                 val allowedOrder = tuple.t2
 
-                val usersBefore = if (userOrder > 0) userOrder - 1 else 0
-                val usersAfter = if (waitingOrder >= userOrder) waitingOrder - userOrder else 0
+                val userRank = if (userOrder > 0) userOrder else 0
+                val totalQueueSize = waitingOrder
                 val progress = if (allowedOrder > 0 && waitingOrder > 0) {
                     (allowedOrder.toDouble() / waitingOrder.toDouble()) * 100.0
                 } else {
                     0.0
                 }
 
-                Triple(usersBefore, usersAfter, progress)
+                QueueStatus(userRank, totalQueueSize, progress)
             }
+            .onErrorReturn(QueueStatus(0L, 0L, 0.0))
     }
 
     // Flow 활용 메서드
@@ -93,15 +100,17 @@ class UserQueueService(
 
     // 대기 큐 등록 또는 상태 조회 (기존 로직 재사용)
     suspend fun registerWaitingQueueOrGetQueueStatus(queue: QueueName, userId: UserId): QueueStatus {
-        return userQueueRepository.findUserWaitOrder(queue, userId)
-            .flatMap { userOrder ->
-                if (userOrder > 0) {
-                    getQueueStatus(queue, userId)
-                } else {
-                    registerWaitQueue(queue, userId)
-                        .flatMap { _ -> getQueueStatus(queue, userId) }
+        return withContext(Dispatchers.IO) {
+            userQueueRepository.findUserWaitOrder(queue, userId)
+                .flatMap { userOrder ->
+                    if (userOrder > 0) {
+                        getQueueStatus(queue, userId)
+                    } else {
+                        registerWaitQueue(queue, userId)
+                            .flatMap { _ -> getQueueStatus(queue, userId) }
+                    }
                 }
-            }
-            .awaitSingle()
+                .awaitSingle()
+        }
     }
 }

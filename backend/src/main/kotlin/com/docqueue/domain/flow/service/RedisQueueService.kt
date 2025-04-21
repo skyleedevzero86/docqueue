@@ -1,6 +1,8 @@
 package com.docqueue.domain.flow.service
 
-import com.docqueue.domain.flow.model.*
+import com.docqueue.domain.flow.model.QueueStatus
+import com.docqueue.domain.flow.model.Token
+import com.docqueue.global.exception.QueueError
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirst
@@ -9,17 +11,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.core.ScanOptions
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.time.Instant
-import com.docqueue.global.exception.QueueError
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.scheduling.annotation.Scheduled
 
 @Service
 class RedisQueueService(
-    @Qualifier("docQueueReactiveRedisTemplate") private val redisTemplate: ReactiveRedisTemplate<String, String>,
+    private val redisTemplate: ReactiveRedisTemplate<String, String>, // @Qualifier 제거
     @Value("\${scheduler.enabled:false}") private val scheduling: Boolean
 ) : QueueService {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -79,7 +79,7 @@ class RedisQueueService(
     override suspend fun isAllowed(queue: QueueName, userId: UserId): Boolean {
         return redisTemplate.opsForZSet()
             .rank(USER_QUEUE_ALLOW_KEY.format(queue), userId.toString())
-            .awaitFirstOrNull() ?: -1L >= 0
+            .awaitFirstOrNull()?.let { it >= 0 } ?: false
     }
 
     override suspend fun validateToken(queue: QueueName, userId: UserId, token: Token): Boolean {

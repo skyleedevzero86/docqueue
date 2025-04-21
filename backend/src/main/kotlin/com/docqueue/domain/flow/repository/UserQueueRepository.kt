@@ -1,5 +1,6 @@
 package com.docqueue.domain.flow.repository
 
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Mono
@@ -7,7 +8,7 @@ import java.time.Duration
 
 @Repository
 class UserQueueRepository(
-    private val redisTemplate: ReactiveRedisTemplate<String, String>
+    @Qualifier("docQueueReactiveRedisTemplate") private val redisTemplate: ReactiveRedisTemplate<String, String>
 ) {
     // Redis 키 생성을 위한 순수 함수
     private fun generateKey(queue: String, keyType: String): String =

@@ -4,6 +4,7 @@ import com.docqueue.domain.flow.dto.QueueUpdateEvent
 import com.docqueue.domain.flow.service.UserQueueService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.reactor.asFlux // asFlux 임포트 추가
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
