@@ -5,8 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
+import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication
+@EnableScheduling
 class BackendApplication {
 
 	@Bean
@@ -16,8 +18,18 @@ class BackendApplication {
 			ctx.beanDefinitionNames.sorted().forEach { println(it) }
 		}
 	}
+	companion object {
+		@JvmStatic
+		fun main(args: Array<String>) {
+			runApplication<BackendApplication>(*args)
+		}
+	}
+
 }
 
+
+/*
 fun main(args: Array<String>) {
 	runApplication<BackendApplication>(*args)
 }
+*/

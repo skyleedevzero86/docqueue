@@ -1,4 +1,4 @@
-package com.docqueue.domain.queue.controller
+package com.docqueue.domain.home.controller
 
 import com.docqueue.domain.home.dto.AllowedUserResponse
 import com.docqueue.domain.home.service.QueueService

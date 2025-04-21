@@ -1,5 +1,6 @@
 package com.docqueue.global.config
 
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory
@@ -10,7 +11,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext
 class RedisConfig {
 
     @Bean
-    fun reactiveRedisTemplate(factory: ReactiveRedisConnectionFactory): ReactiveRedisTemplate<String, String> {
+    fun docQueueReactiveRedisTemplate(factory: ReactiveRedisConnectionFactory): ReactiveRedisTemplate<String, String> {
         return ReactiveRedisTemplate(factory, RedisSerializationContext.string())
     }
 }
