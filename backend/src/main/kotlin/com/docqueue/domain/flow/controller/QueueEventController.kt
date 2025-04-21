@@ -1,23 +1,22 @@
 package com.docqueue.domain.flow.controller
 
 import com.docqueue.domain.flow.dto.QueueUpdateEvent
-import com.docqueue.domain.flow.model.QueueStatus
-import com.docqueue.domain.flow.service.UserQueueService
+import com.docqueue.domain.home.dto.AllowedUserResponse
+import com.docqueue.domain.home.service.QueueService
 import kotlinx.coroutines.flow.Flow
+import org.springframework.web.bind.annotation.*
+import com.docqueue.domain.flow.service.UserQueueService
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.reactor.asFlux
 import org.springframework.http.MediaType
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Flux
 import java.time.Duration
 
 @RestController
 @RequestMapping("/api/v1/queue")
 class QueueEventController(
-    private val userQueueService: UserQueueService
+    private val userQueueService: UserQueueService,
+    private val queueService: QueueService
 ) {
     /**
      * Server-Sent Events를 통한 대기열 상태 업데이트 스트리밍
@@ -31,9 +30,9 @@ class QueueEventController(
             .flatMap { userQueueService.getQueueStatus(queue, userId) }
             .map { status ->
                 QueueUpdateEvent(
-                    status.userRank,            // first 대신 userRank 속성 사용
-                    status.totalQueueSize,      // second 대신 totalQueueSize 속성 사용
-                    status.progress             // third 대신 progress 속성 사용
+                    status.userRank,
+                    status.totalQueueSize,
+                    status.progress
                 )
             }
             .distinctUntilChanged()
@@ -51,12 +50,38 @@ class QueueEventController(
             .getQueueStatusAsFlow(queue, userId)
             .map { status ->
                 QueueUpdateEvent(
-                    status.userRank,            // first 대신 userRank 속성 사용
-                    status.totalQueueSize,      // second 대신 totalQueueSize 속성 사용
-                    status.progress             // third 대신 progress 속성 사용
+                    status.userRank,            
+                    status.totalQueueSize,
+                    status.progress
                 )
             }
-
         return statusFlow.asFlux()
     }
+
+    @GetMapping("/allowed")
+    fun isUserAllowed(
+        @RequestParam("queue") queue: String,
+        @RequestParam("user-id") userId: Long,
+        @RequestParam("token") token: String
+    ): Flow<AllowedUserResponse> {
+        return queueService.getAllowedUserResponse(queue, userId, token)
+    }
+
+    @PostMapping("/add")
+    fun addUserToQueue(
+        @RequestParam("queue") queue: String,
+        @RequestParam("user-id") userId: Long,
+        @RequestParam("token") token: String
+    ) {
+        queueService.addUserToQueue(queue, userId, token)
+    }
+
+    @PostMapping("/allow")
+    fun allowUser(
+        @RequestParam("queue") queue: String,
+        @RequestParam("user-id") userId: Long
+    ) {
+        queueService.allowUser(queue, userId)
+    }
+
 }
