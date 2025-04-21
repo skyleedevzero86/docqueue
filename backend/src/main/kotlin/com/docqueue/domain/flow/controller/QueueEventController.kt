@@ -50,7 +50,7 @@ class QueueEventController(
             .getQueueStatusAsFlow(queue, userId)
             .map { status ->
                 QueueUpdateEvent(
-                    status.userRank,            
+                    status.userRank,
                     status.totalQueueSize,
                     status.progress
                 )

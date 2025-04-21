@@ -1,7 +1,9 @@
 package com.docqueue.domain.flow.service
 
 import com.docqueue.domain.flow.model.QueueStatus
-import com.docqueue.domain.flow.model.Token
+import com.docqueue.global.datas.queue.QueueName
+import com.docqueue.global.datas.queue.Token
+import com.docqueue.global.datas.queue.UserId
 import com.docqueue.global.exception.QueueError
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.asFlow

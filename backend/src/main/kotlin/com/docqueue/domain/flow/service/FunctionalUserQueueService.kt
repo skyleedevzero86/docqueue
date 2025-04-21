@@ -1,6 +1,7 @@
 package com.docqueue.domain.flow.service
 
 import com.docqueue.domain.flow.repository.UserQueueRepository
+import com.docqueue.global.datas.queue.QueueStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactive.awaitSingle

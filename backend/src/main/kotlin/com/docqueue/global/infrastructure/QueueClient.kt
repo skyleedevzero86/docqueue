@@ -1,9 +1,9 @@
 package com.docqueue.global.infrastructure
 
 import com.docqueue.domain.home.dto.AllowedUserResponse
-import com.docqueue.domain.home.service.QueueName
-import com.docqueue.domain.home.service.Token
-import com.docqueue.domain.home.service.UserId
+import com.docqueue.global.datas.queue.QueueName
+import com.docqueue.global.datas.queue.Token
+import com.docqueue.global.datas.queue.UserId
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient

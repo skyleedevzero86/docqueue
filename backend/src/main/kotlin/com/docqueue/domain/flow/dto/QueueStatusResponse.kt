@@ -1,6 +1,6 @@
 package com.docqueue.domain.flow.dto
 
-import com.docqueue.domain.flow.service.QueueStatus
+import com.docqueue.global.datas.queue.QueueStatus
 
 
 data class QueueStatusResponse(
