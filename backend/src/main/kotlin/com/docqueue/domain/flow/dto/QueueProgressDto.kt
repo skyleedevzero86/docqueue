@@ -1,4 +1,4 @@
-package com.docqueue.domain.flow.model
+package com.docqueue.domain.flow.dto
 
 data class RegisterResponse(val rank: Long)
 data class AllowResponse(val requestCount: Long, val allowedCount: Long)

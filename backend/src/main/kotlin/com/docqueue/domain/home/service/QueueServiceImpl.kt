@@ -3,8 +3,7 @@ package com.docqueue.domain.home.service
 import com.docqueue.global.datas.queue.QueueName
 import com.docqueue.global.datas.queue.Token
 import com.docqueue.global.datas.queue.UserId
-import com.docqueue.domain.home.dto.AllowedUserResponse
-import com.docqueue.domain.home.entity.UserQueue
+import com.docqueue.domain.home.dto.UserQueue
 import kotlinx.coroutines.flow.Flow
 import org.springframework.stereotype.Service
 import kotlinx.coroutines.flow.flow
@@ -12,6 +11,7 @@ import com.docqueue.global.infrastructure.QueueClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.docqueue.domain.flow.dto.AllowedUserResponse
 
 @Service
 class QueueServiceImpl(

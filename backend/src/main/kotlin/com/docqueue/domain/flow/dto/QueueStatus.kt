@@ -1,4 +1,4 @@
-package com.docqueue.domain.flow.model
+package com.docqueue.domain.flow.dto
 
 data class QueueStatus(
     val userRank: Long,

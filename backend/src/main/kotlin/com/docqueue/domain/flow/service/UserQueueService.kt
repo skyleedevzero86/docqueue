@@ -1,6 +1,6 @@
 package com.docqueue.domain.flow.service
 
-import com.docqueue.domain.flow.model.QueueStatus
+import com.docqueue.domain.flow.dto.QueueStatus
 import com.docqueue.domain.flow.repository.UserQueueRepository
 import com.docqueue.global.datas.queue.QueueName
 import com.docqueue.global.datas.queue.UserId
@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.reactive.awaitSingle
 
 @Service
 class UserQueueService(
@@ -101,7 +102,8 @@ class UserQueueService(
     }
 
     // 대기 큐 등록 또는 상태 조회 (코루틴 방식으로 수정)
-    suspend fun registerWaitingQueueOrGetQueueStatus(queue: QueueName, userId: UserId): QueueStatus {
+
+   suspend fun registerWaitingQueueOrGetQueueStatus(queue: QueueName, userId: UserId): QueueStatus {
         return withContext(Dispatchers.IO) {
             val userOrder = userQueueRepository.findUserWaitOrder(queue, userId).awaitSingle()
 

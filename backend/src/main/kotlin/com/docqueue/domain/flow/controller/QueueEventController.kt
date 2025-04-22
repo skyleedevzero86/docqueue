@@ -1,7 +1,7 @@
 package com.docqueue.domain.flow.controller
 
+import com.docqueue.domain.flow.dto.AllowedUserResponse
 import com.docqueue.domain.flow.dto.QueueUpdateEvent
-import com.docqueue.domain.home.dto.AllowedUserResponse
 import com.docqueue.domain.home.service.QueueService
 import kotlinx.coroutines.flow.Flow
 import org.springframework.web.bind.annotation.*

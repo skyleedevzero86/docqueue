@@ -1,4 +1,4 @@
-package com.docqueue.domain.home.entity
+package com.docqueue.domain.home.dto
 
 data class UserQueue(
     val queue: String,

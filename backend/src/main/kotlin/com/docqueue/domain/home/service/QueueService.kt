@@ -3,9 +3,9 @@ package com.docqueue.domain.home.service
 import com.docqueue.global.datas.queue.QueueName
 import com.docqueue.global.datas.queue.Token
 import com.docqueue.global.datas.queue.UserId
-import com.docqueue.domain.home.entity.UserQueue
+import com.docqueue.domain.home.dto.UserQueue
 import kotlinx.coroutines.flow.Flow
-import com.docqueue.domain.home.dto.AllowedUserResponse
+import com.docqueue.domain.flow.dto.AllowedUserResponse
 
 interface QueueService {
     fun checkAccess(queue: QueueName, userId: UserId, token: Token): Flow<UserQueue>

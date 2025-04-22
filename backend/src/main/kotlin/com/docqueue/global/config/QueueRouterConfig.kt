@@ -1,9 +1,9 @@
 package com.docqueue.global.config
 
-import com.docqueue.domain.flow.model.AllowResponse
-import com.docqueue.domain.flow.model.AllowedStatus
-import com.docqueue.domain.flow.model.QueueProgress
-import com.docqueue.domain.flow.model.RegisterResponse
+import com.docqueue.domain.flow.dto.AllowResponse
+import com.docqueue.domain.flow.dto.AllowedStatus
+import com.docqueue.domain.flow.dto.QueueProgress
+import com.docqueue.domain.flow.dto.RegisterResponse
 import com.docqueue.domain.flow.service.QueueService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
