@@ -1,10 +1,90 @@
-<!DOCTYPE html>
-<html lang="en">
+<html layout:decorate="~{global/usrLayout}">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>기달려주세요..</title>
+    <style type="text/css">
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #5c5c7d;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .progress {
+            height: 100%;
+            background-color: #ff66b2;
+            width: 0; /* 초기 상태 */
+            border-radius: 10px 0 0 10px;
+            transition: width 1s ease-in-out;
+        }
+        .queue-info {
+            font-size: 1em;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        .warning {
+            color: #ff4040;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        .logo {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ff66b2;
+        }
+    </style>
+    <script type="text/javascript" th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressElement = document.querySelector('.progress');
+
+            function updateProgress() {
+                const queue = '[[${queue}]]';
+                const userId = '[[${userId}]]';
+                const queryParam = new URLSearchParams({'queue': queue, 'user-id': userId});
+                fetch('/api/v1/queue/progress?' + queryParam)
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.queueFront < 0) {
+                            fetch('/api/v1/queue/touch?' + queryParam)
+                                .then(response => {
+                                    document.querySelector('#queueFront').innerHTML = 0;
+                                    document.querySelector('#updated').innerHTML = new Date();
+
+                                    const newUrl = window.location.origin + window.location.pathname + window.location.search;
+                                    window.location.href = newUrl;
+                                })
+                                .catch(error => console.error(error));
+                            return;
+                        }
+                        document.querySelector('#queueFront').innerHTML = data.queueFront;
+                        document.querySelector('#queueBack').innerHTML = data.queueBack;
+                        document.querySelector('#updated').innerHTML = new Date();
+
+                        const progress = data.progress;
+                        progressElement.style.width = progress + '%';
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            // 동적으로 로딩바를 업데이트
+            setInterval(updateProgress, 3000);
+        });
+    </script>
 </head>
 <body>
-
+    <div layout:fragment="content" class="container mt-5">
+        <h1><span class="highlight">서비스 접속대기</span> 중입니다.</h1>
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+        <div class="queue-info">
+            고객님 앞에 <span class="highlight" th:text="${queueFront}" id="queueFront">1269</span> 명, 뒤에 <span class="highlight" th:text="${queueBack}" id="queueBack">9</span> 명의 대기자가 있습니다.<br>
+            현재 접속 사용자가 많아 대기 중입니다.
+        </div>
+        <div class="warning">※ 재접속하시면 대기시간이 더 길어질 수 있습니다.</div>
+        <p id="updated"></p>
+        <div class="logo">★띵곡 플레이리스트★</div>
+    </div>
 </body>
 </html>
