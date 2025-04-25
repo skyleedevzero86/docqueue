@@ -19,11 +19,13 @@ class SecurityConfig {
                     .pathMatchers("/waiting-room").permitAll()
                     .pathMatchers("/index").permitAll()
                     .pathMatchers("/home").permitAll()
-                    .pathMatchers("/login").permitAll() // 로그인 페이지 접근 허용
+                    .pathMatchers("/login").permitAll()
+                    .pathMatchers("/gen/images/**").permitAll()
+                    .pathMatchers("/*.jpg", "/*.png", "/*.jpeg").permitAll()
                     .anyExchange().authenticated()
             }
             .formLogin { form ->
-                form.loginPage("/login") // 로그인 페이지 경로 설정
+                form.loginPage("/login")
             }
             .build()
     }
