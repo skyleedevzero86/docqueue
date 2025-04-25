@@ -17,9 +17,12 @@ class SecurityConfig {
                 exchanges
                     .pathMatchers("/api/v1/queue/**").permitAll()
                     .pathMatchers("/waiting-room").permitAll()
+                    .pathMatchers("/login").permitAll()
+                    .pathMatchers("/").permitAll()
                     .pathMatchers("/index").permitAll()
                     .pathMatchers("/home").permitAll()
-                    .pathMatchers("/login").permitAll()
+                    .pathMatchers("/logout").permitAll()
+                    .pathMatchers("/images/**").permitAll()
                     .pathMatchers("/gen/images/**").permitAll()
                     .pathMatchers("/*.jpg", "/*.png", "/*.jpeg").permitAll()
                     .anyExchange().authenticated()
