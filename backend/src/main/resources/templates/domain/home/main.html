@@ -1,4 +1,4 @@
-<html layout:decorate="~{global/usrLayout}">
+<html layout:decorate="~{global/userLayout}">
 <head>
     <title>대기열 상세보기</title>
     <style type="text/css">
@@ -17,6 +17,7 @@
             color: #fff;
             font-family: 'Arial', sans-serif;
             text-align: center;
+            cursor: pointer; /* 커서를 포인터로 변경하여 클릭 가능함을 표시 */
         }
         .overlay h1 {
             font-size: 3em;
@@ -45,17 +46,39 @@
             to { opacity: 1; }
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.querySelector('.overlay');
+
+            // 오버레이를 클릭했을 때 숨기는 이벤트
+            overlay.addEventListener('click', function(event) {
+                // iframe 내부 클릭 이벤트가 오버레이로 전파되지 않도록 처리
+                if (event.target !== this && !event.target.classList.contains('overlay')) {
+                    return;
+                }
+                this.style.display = 'none'; // 오버레이 클릭 시 숨기기
+            });
+
+            // 비디오 컨테이너 클릭 이벤트 전파 방지
+            const videoContainer = document.querySelector('.video-container');
+            videoContainer.addEventListener('click', function(event) {
+                event.stopPropagation(); // 이벤트 버블링 방지
+            });
+        });
+    </script>
 </head>
 <body>
-    <div layout:fragment="content" class="container mt-5">
-        <img th:src="@{/gen/images/notphoto.jpg}" alt="Idol Image">
-        <div class="overlay">
-            <h1>★띵곡 플레이리스트★</h1>
-            <p>학습하기위해 코딩했습니다.</p>
-            <div class="video-container">
-                <iframe width="560" height="315" src="https://youtu.be/o-tgQzqlwkQ?si=MNwZxQlCZtnuSsJL" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-            </div>
+<div layout:fragment="content" class="container mt-5">
+    <!-- 이미지 경로 수정 - 상대 경로 사용 -->
+    <img th:src="@{/gen.images/notphoto.jpg}" alt="Idol Image" onerror="this.onerror=null; this.src='/static/gen/images/notphoto.jpg';">
+
+    <div class="overlay">
+        <h1>★띵곡 플레이리스트★</h1>
+        <p>학습하기위해 코딩했습니다.</p>
+        <div class="video-container">
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/Stm3EiJaCH4?si=RMdTtUVNeJHu8EyT" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         </div>
     </div>
+</div>
 </body>
 </html>
