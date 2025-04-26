@@ -1,4 +1,5 @@
-<html layout:decorate="~{global/userLayout}">
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.thymeleaf.org" lang="ko" layout:decorate="~{global/userLayout}">
 <head>
     <title>영수증 생성기</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -128,6 +129,7 @@
                     updatePreview();
                 });
 
+                // 항목명 입력 시 미리보기 업데이트
                 const nameInput = newRow.querySelector('.item-name');
                 nameInput.addEventListener('input', function() {
                     updatePreview();
@@ -200,7 +202,7 @@
                 const nameInputs = document.querySelectorAll('.item-name');
                 const priceInputs = document.querySelectorAll('.item-price');
 
-                for(let i = 0; i < nameInputs.length; i++) {
+                for (let i = 0; i < nameInputs.length; i++) {
                     const name = nameInputs[i].value || 'Item';
                     const price = parseFloat(priceInputs[i].value) || 0;
 
@@ -236,23 +238,23 @@
         </div>
 
         <div class="receipt-info">
-            <div>Address: <span id="previewAddress" th:text="${receipt.address}">1234 Lorem Ipsum, Dolor</span></div>
-            <div>Tel: <span id="previewPhone" th:text="${receipt.phoneNumber}">123-456-7890</span></div>
+            <div>Address: <span id="previewAddress" th:text="${receipt?.address ?: '1234 Lorem Ipsum, Dolor'}">1234 Lorem Ipsum, Dolor</span></div>
+            <div>Tel: <span id="previewPhone" th:text="${receipt?.phoneNumber ?: '123-456-7890'}">123-456-7890</span></div>
         </div>
 
         <div class="receipt-divider"></div>
 
         <div class="receipt-info">
-            <div>Date: <span id="previewDate" th:text="${#temporals.format(receipt.date, 'yyyy-MM-dd')}">2025-04-26</span>
-                <span id="previewTime" th:text="${#temporals.format(receipt.date, 'HH:mm')}">10:35</span></div>
+            <div>Date: <span id="previewDate" th:text="${receipt != null ? #temporals.format(receipt.date, 'yyyy-MM-dd') : '2025-04-26'}">2025-04-26</span>
+                <span id="previewTime" th:text="${receipt != null ? #temporals.format(receipt.date, 'HH:mm') : '10:35'}">10:35</span></div>
         </div>
 
         <div class="receipt-divider"></div>
 
         <div id="receiptItems">
-            <div class="receipt-item" th:each="item : ${receipt.items}">
+            <div class="receipt-item" th:each="item : ${receipt?.items ?: T(java.util.Arrays).asList(new com.docqueue.domain.receipt.entity.ReceiptItem('Item Name', 0.00))}">
                 <span th:text="${item.name}">Item Name</span>
-                <span th:text="${item.price}">0.00</span>
+                <span th:text="${#numbers.formatDecimal(item.price, 1, 2)}">0.00</span>
             </div>
         </div>
 
@@ -260,17 +262,17 @@
 
         <div class="receipt-total">
             <span>Total</span>
-            <span id="previewTotal" th:text="${receipt.totalAmount}">84.80</span>
+            <span id="previewTotal" th:text="${receipt?.totalAmount != null ? #numbers.formatDecimal(receipt.totalAmount, 1, 2) : '0.00'}">0.00</span>
         </div>
 
         <div class="receipt-payment">
             <span>Cash</span>
-            <span id="previewCash" th:text="${receipt.cashAmount}">100.00</span>
+            <span id="previewCash" th:text="${receipt?.cashAmount != null ? #numbers.formatDecimal(receipt.cashAmount, 1, 2) : '0.00'}">0.00</span>
         </div>
 
         <div class="receipt-payment">
             <span>Change</span>
-            <span id="previewChange" th:text="${receipt.changeAmount}">15.20</span>
+            <span id="previewChange" th:text="${receipt?.changeAmount != null ? #numbers.formatDecimal(receipt.changeAmount, 1, 2) : '0.00'}">0.00</span>
         </div>
 
         <div class="receipt-qr">
@@ -282,18 +284,18 @@
     <form id="receiptForm" th:action="@{/receipts/generate}" method="post">
         <div class="form-group">
             <label for="address">주소:</label>
-            <input type="text" id="address" name="address" class="form-control" th:value="${receipt.address}" required>
+            <input type="text" id="address" name="address" class="form-control" th:value="${receipt?.address}" required>
         </div>
 
         <div class="form-group">
             <label for="phoneNumber">전화번호:</label>
-            <input type="text" id="phoneNumber" name="phoneNumber" class="form-control" th:value="${receipt.phoneNumber}" required>
+            <input type="text" id="phoneNumber" name="phoneNumber" class="form-control" th:value="${receipt?.phoneNumber}" required>
         </div>
 
         <div class="item-form">
             <h3>영수증 항목</h3>
             <div id="itemsContainer">
-                <div class="item-row" th:each="item, itemStat : ${receipt.items}">
+                <div class="item-row" th:each="item, itemStat : ${receipt?.items ?: T(java.util.Arrays).asList(new com.docqueue.domain.receipt.entity.ReceiptItem('', 0.00))}">
                     <input type="text" name="itemName" class="item-name" th:value="${item.name}" placeholder="항목명" required>
                     <input type="number" name="itemPrice" class="item-price" th:value="${item.price}" placeholder="가격" step="0.01" required>
                     <button type="button" class="remove-item-btn" th:if="${itemStat.index > 0}">삭제</button>
@@ -304,17 +306,17 @@
 
         <div class="form-group">
             <label for="totalAmount">합계:</label>
-            <input type="number" id="totalAmount" name="totalAmount" step="0.01" class="form-control" th:value="${receipt.totalAmount}" required>
+            <input type="number" id="totalAmount" name="totalAmount" step="0.01" class="form-control" th:value="${receipt?.totalAmount}" required>
         </div>
 
         <div class="form-group">
             <label for="cashAmount">받은 금액:</label>
-            <input type="number" id="cashAmount" name="cashAmount" step="0.01" class="form-control" th:value="${receipt.cashAmount}" required>
+            <input type="number" id="cashAmount" name="cashAmount" step="0.01" class="form-control" th:value="${receipt?.cashAmount}" required>
         </div>
 
         <div class="form-group">
             <label for="changeAmount">거스름돈:</label>
-            <input type="number" id="changeAmount" name="changeAmount" step="0.01" class="form-control" th:value="${receipt.changeAmount}" required>
+            <input type="number" id="changeAmount" name="changeAmount" step="0.01" class="form-control" th:value="${receipt?.changeAmount}" required>
         </div>
 
         <div class="button-container">

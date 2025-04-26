@@ -8,9 +8,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.server.ServerWebExchange
+import org.slf4j.LoggerFactory
+
 
 @RestControllerAdvice
 class ApplicationAdvice {
+
+    private val logger = LoggerFactory.getLogger(ApplicationAdvice::class.java)
 
     @ExceptionHandler(ApplicationException::class)
     fun applicationExceptionHandler(ex: ApplicationException): Flow<ResponseEntity<ServerExceptionResponse>> {
@@ -22,22 +26,15 @@ class ApplicationAdvice {
     }
 
     @ExceptionHandler(ResponseStatusException::class)
-    fun handleResponseStatusException(ex: ResponseStatusException, exchange: ServerWebExchange): Flow<ResponseEntity<ServerExceptionResponse>> {
-        println("ResponseStatusException이 발생했습니다: ${ex.message}, Status: ${ex.statusCode}")
-        return flowOf(
-            ResponseEntity
-                .status(ex.statusCode)
-                .body(ServerExceptionResponse("WEBFLUX-${ex.statusCode.value()}", ex.reason ?: "WebFlux 오류 발생"))
-        )
+    fun handleResponseStatusException(ex: ResponseStatusException, exchange: ServerWebExchange): ResponseEntity<Map<String, String>> {
+        logger.error("ResponseStatusException이 발생했습니다: ${ex.message}, Status: ${ex.statusCode}")
+        return ResponseEntity.status(ex.statusCode).body(mapOf("error" to (ex.reason ?: "Unknown error")))
     }
 
     @ExceptionHandler(Exception::class)
-    fun handleGeneralException(ex: Exception, exchange: ServerWebExchange): Flow<ResponseEntity<ServerExceptionResponse>> {
-        println("예기치 않은 오류가 발생했습니다: ${ex.message}, Stacktrace: ${ex.stackTraceToString()}")
-        return flowOf(
-            ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ServerExceptionResponse("GEN-0001", "서버 내부 오류가 발생했습니다: ${ex.message}"))
-        )
+    fun handleGenericException(ex: Exception, exchange: ServerWebExchange): ResponseEntity<Map<String, String>> {
+        logger.error("예상치 못한 오류 발생: ${ex.message}", ex)
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(mapOf("error" to "서버 내부 오류: ${ex.message ?: "Unknown error"}"))
     }
 }
