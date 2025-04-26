@@ -25,6 +25,7 @@ class SecurityConfig {
                     .pathMatchers("/images/**").permitAll()
                     .pathMatchers("/gen/images/**").permitAll()
                     .pathMatchers("/*.jpg", "/*.png", "/*.jpeg").permitAll()
+                    .pathMatchers("/receipts/**").permitAll()
                     .anyExchange().authenticated()
             }
             .formLogin { form ->

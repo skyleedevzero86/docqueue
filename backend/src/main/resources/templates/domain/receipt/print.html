@@ -1,0 +1,317 @@
+<html layout:decorate="~{global/userLayout}">
+<head>
+    <title>대기열 상세보기</title>
+    <style type="text/css">
+        .receipt-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            font-family: monospace;
+        }
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .receipt-header h2 {
+            margin: 0;
+            font-weight: bold;
+        }
+        .receipt-info {
+            margin-bottom: 10px;
+        }
+        .receipt-divider {
+            border-top: 1px dashed #999;
+            margin: 10px 0;
+        }
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        .receipt-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+        .receipt-payment {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        .receipt-qr {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .print-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .print-button:hover {
+            background-color: #45a049;
+        }
+        .item-form {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+        .item-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .item-row input {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        .add-item-btn {
+            padding: 5px 10px;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #receiptForm {
+            margin-top: 20px;
+        }
+    </style>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const addItemBtn = document.getElementById('addItemBtn');
+            const itemsContainer = document.getElementById('itemsContainer');
+            const form = document.getElementById('receiptForm');
+
+            // 항목 추가
+            addItemBtn.addEventListener('click', function() {
+                const newRow = document.createElement('div');
+                newRow.className = 'item-row';
+                newRow.innerHTML = `
+                    <input type="text" name="itemName" class="item-name" placeholder="항목명" required>
+                    <input type="number" name="itemPrice" class="item-price" placeholder="가격" step="0.01" required>
+                    <button type="button" class="remove-item-btn">삭제</button>
+                `;
+                itemsContainer.appendChild(newRow);
+
+                // 삭제 버튼 이벤트 추가
+                const removeBtn = newRow.querySelector('.remove-item-btn');
+                removeBtn.addEventListener('click', function() {
+                    itemsContainer.removeChild(newRow);
+                    updateTotal();
+                    updatePreview();
+                });
+
+                // 가격 입력 시 합계 업데이트
+                const priceInput = newRow.querySelector('.item-price');
+                priceInput.addEventListener('input', function() {
+                    updateTotal();
+                    updatePreview();
+                });
+
+                const nameInput = newRow.querySelector('.item-name');
+                nameInput.addEventListener('input', function() {
+                    updatePreview();
+                });
+            });
+
+            // 기존 항목의 삭제 버튼 이벤트 추가
+            document.querySelectorAll('.remove-item-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    btn.closest('.item-row').remove();
+                    updateTotal();
+                    updatePreview();
+                });
+            });
+
+            // 가격 입력 시 합계 업데이트
+            document.querySelectorAll('.item-price').forEach(input => {
+                input.addEventListener('input', function() {
+                    updateTotal();
+                    updatePreview();
+                });
+            });
+
+            // 항목명 입력 시 미리보기 업데이트
+            document.querySelectorAll('.item-name').forEach(input => {
+                input.addEventListener('input', function() {
+                    updatePreview();
+                });
+            });
+
+            // 주소 및 전화번호 입력 시 미리보기 업데이트
+            document.getElementById('address').addEventListener('input', function() {
+                document.getElementById('previewAddress').textContent = this.value;
+            });
+
+            document.getElementById('phoneNumber').addEventListener('input', function() {
+                document.getElementById('previewPhone').textContent = this.value;
+            });
+
+            // 받은 금액 입력 시 거스름돈 계산
+            document.getElementById('cashAmount').addEventListener('input', function() {
+                const total = parseFloat(document.getElementById('totalAmount').value) || 0;
+                const cash = parseFloat(this.value) || 0;
+                const change = Math.max(0, cash - total).toFixed(2);
+                document.getElementById('changeAmount').value = change;
+                document.getElementById('previewCash').textContent = cash.toFixed(2);
+                document.getElementById('previewChange').textContent = change;
+            });
+
+            // 합계 업데이트 함수
+            function updateTotal() {
+                const prices = Array.from(document.querySelectorAll('.item-price'))
+                    .map(input => parseFloat(input.value) || 0);
+                const total = prices.reduce((sum, price) => sum + price, 0);
+                document.getElementById('totalAmount').value = total.toFixed(2);
+                document.getElementById('previewTotal').textContent = total.toFixed(2);
+
+                // 거스름돈 업데이트
+                const cash = parseFloat(document.getElementById('cashAmount').value) || 0;
+                const change = Math.max(0, cash - total).toFixed(2);
+                document.getElementById('changeAmount').value = change;
+                document.getElementById('previewChange').textContent = change;
+            }
+
+            // 미리보기 업데이트 함수
+            function updatePreview() {
+                const itemsPreview = document.getElementById('receiptItems');
+                itemsPreview.innerHTML = '';
+
+                const nameInputs = document.querySelectorAll('.item-name');
+                const priceInputs = document.querySelectorAll('.item-price');
+
+                for(let i = 0; i < nameInputs.length; i++) {
+                    const name = nameInputs[i].value || 'Item';
+                    const price = parseFloat(priceInputs[i].value) || 0;
+
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'receipt-item';
+                    itemDiv.innerHTML = `
+                        <span>${name}</span>
+                        <span>${price.toFixed(2)}</span>
+                    `;
+                    itemsPreview.appendChild(itemDiv);
+                }
+            }
+
+            // 현재 날짜와 시간 설정
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toTimeString().substring(0, 5);
+            document.getElementById('previewDate').textContent = dateStr;
+            document.getElementById('previewTime').textContent = timeStr;
+
+            // 초기 합계 계산
+            updateTotal();
+        });
+    </script>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-5">
+    <h1 class="mb-4">영수증 생성기</h1>
+
+    <div class="receipt-container" id="receiptPreview">
+        <div class="receipt-header">
+            <h2>CASH RECEIPT</h2>
+        </div>
+
+        <div class="receipt-info">
+            <div>Address: <span id="previewAddress" th:text="${receipt.address}">1234 Lorem Ipsum, Dolor</span></div>
+            <div>Tel: <span id="previewPhone" th:text="${receipt.phoneNumber}">123-456-7890</span></div>
+        </div>
+
+        <div class="receipt-divider"></div>
+
+        <div class="receipt-info">
+            <div>Date: <span id="previewDate" th:text="${#temporals.format(receipt.date, 'yyyy-MM-dd')}">2025-04-26</span>
+                <span id="previewTime" th:text="${#temporals.format(receipt.date, 'HH:mm')}">10:35</span></div>
+        </div>
+
+        <div class="receipt-divider"></div>
+
+        <div id="receiptItems">
+            <div class="receipt-item" th:each="item : ${receipt.items}">
+                <span th:text="${item.name}">Item Name</span>
+                <span th:text="${item.price}">0.00</span>
+            </div>
+        </div>
+
+        <div class="receipt-divider"></div>
+
+        <div class="receipt-total">
+            <span>Total</span>
+            <span id="previewTotal" th:text="${receipt.totalAmount}">84.80</span>
+        </div>
+
+        <div class="receipt-payment">
+            <span>Cash</span>
+            <span id="previewCash" th:text="${receipt.cashAmount}">100.00</span>
+        </div>
+
+        <div class="receipt-payment">
+            <span>Change</span>
+            <span id="previewChange" th:text="${receipt.changeAmount}">15.20</span>
+        </div>
+
+        <div class="receipt-qr">
+            <div>QR CODE</div>
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAABlBMVEX///8AAABVwtN+AAAA8ElEQVR4nO3VsQ2EAAwAQd7L4PT/r8VmDXQYKVOschlj5lrH7LXWnPPsexwze39/f39/f39/f39//3f9b/KfJ/n7+/v7+/v7+/v7+/v7v++/kv/7if/+/v7+/v7+/v7+/v7+/m/+/v7+/v7+/v7+/v7+7/v/7e/v7+/v7+/v7+/v7/++/+3/3+Tv7+/v7+/v7+/v7+/v//7/r7+/v7+/v7+/v7+/v//7/if5+/v7+/v7+/v7+/v7+7/vv5O/v7+/v7+/v7+/v7//+/4r+c/f39/f39/f39/f39//ff+d/I/f39/f39/f39/f39//Myf1AVGUDYpwRaLaAAAAAElFTkSuQmCC" alt="QR Code" width="100" height="100">
+        </div>
+    </div>
+
+    <form id="receiptForm" th:action="@{/receipts/generate}" method="post">
+        <div class="form-group">
+            <label for="address">주소:</label>
+            <input type="text" id="address" name="address" class="form-control" th:value="${receipt.address}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="phoneNumber">전화번호:</label>
+            <input type="text" id="phoneNumber" name="phoneNumber" class="form-control" th:value="${receipt.phoneNumber}" required>
+        </div>
+
+        <div class="item-form">
+            <h3>영수증 항목</h3>
+            <div id="itemsContainer">
+                <div class="item-row" th:each="item, itemStat : ${receipt.items}">
+                    <input type="text" name="itemName" class="item-name" th:value="${item.name}" placeholder="항목명" required>
+                    <input type="number" name="itemPrice" class="item-price" th:value="${item.price}" placeholder="가격" step="0.01" required>
+                    <button type="button" class="remove-item-btn" th:if="${itemStat.index > 0}">삭제</button>
+                </div>
+            </div>
+            <button type="button" id="addItemBtn" class="add-item-btn">항목 추가</button>
+        </div>
+
+        <div class="form-group">
+            <label for="totalAmount">합계:</label>
+            <input type="number" id="totalAmount" name="totalAmount" step="0.01" class="form-control" th:value="${receipt.totalAmount}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="cashAmount">받은 금액:</label>
+            <input type="number" id="cashAmount" name="cashAmount" step="0.01" class="form-control" th:value="${receipt.cashAmount}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="changeAmount">거스름돈:</label>
+            <input type="number" id="changeAmount" name="changeAmount" step="0.01" class="form-control" th:value="${receipt.changeAmount}" required>
+        </div>
+
+        <div class="button-container">
+            <button type="submit" class="print-button">PDF 생성 및 다운로드</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>
