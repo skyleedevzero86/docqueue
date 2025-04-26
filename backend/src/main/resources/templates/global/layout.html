@@ -1,4 +1,3 @@
-<!doctype html>
 <html lang="ko">
 <head>
     <meta charset="utf-8">
@@ -21,9 +20,9 @@
 <!--    <meta name="_csrf" th:content="${_csrf.token}"/>-->
 <!--    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>-->
 
-    <script type="text/javascript">
-        const urlParams = getUrlParams(location.href);
-    </script>
+<!--    <script type="text/javascript">-->
+<!--        const urlParams = getUrlParams(location.href);-->
+<!--    </script>-->
 </head>
 <body>
 
@@ -39,13 +38,13 @@
         }
     });
 
-    if (urlParams.msg) {
-        toastNotice(urlParams.msg);
-    }
-
-    if (urlParams.failMsg) {
-        toastWarning(urlParams.failMsg);
-    }
+    // if (urlParams.msg) {
+    //     toastNotice(urlParams.msg);
+    // }
+    //
+    // if (urlParams.failMsg) {
+    //     toastWarning(urlParams.failMsg);
+    // }
 </script>
 
 </body>

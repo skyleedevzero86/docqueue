@@ -15,17 +15,10 @@ class SecurityConfig {
             .csrf { it.disable() }
             .authorizeExchange { exchanges ->
                 exchanges
-                    .pathMatchers("/api/v1/queue/**").permitAll()
-                    .pathMatchers("/waiting-room").permitAll()
-                    .pathMatchers("/login").permitAll()
-                    .pathMatchers("/").permitAll()
-                    .pathMatchers("/index").permitAll()
-                    .pathMatchers("/home").permitAll()
-                    .pathMatchers("/logout").permitAll()
-                    .pathMatchers("/images/**").permitAll()
-                    .pathMatchers("/gen/images/**").permitAll()
-                    .pathMatchers("/*.jpg", "/*.png", "/*.jpeg").permitAll()
-                    .pathMatchers("/receipts/**").permitAll()
+                    .pathMatchers("/api/v1/queue/**","/waiting-room", "/login","/","/index","/home","/logout",
+                        "/images/**","/gen/images/**","/*.jpg", "/*.png", "/*.jpeg",
+                        "/receipts/**","/*.css","/*.js", "/*.gif","/*.svg","/*.woff","/*.woff2","/*.ttf", "/*.eot"
+                    ).permitAll()
                     .anyExchange().authenticated()
             }
             .formLogin { form ->

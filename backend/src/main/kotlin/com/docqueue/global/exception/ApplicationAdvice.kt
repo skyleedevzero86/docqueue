@@ -23,7 +23,7 @@ class ApplicationAdvice {
 
     @ExceptionHandler(ResponseStatusException::class)
     fun handleResponseStatusException(ex: ResponseStatusException, exchange: ServerWebExchange): Flow<ResponseEntity<ServerExceptionResponse>> {
-        println("ResponseStatusException occurred: ${ex.message}, Status: ${ex.statusCode}")
+        println("ResponseStatusException이 발생했습니다: ${ex.message}, Status: ${ex.statusCode}")
         return flowOf(
             ResponseEntity
                 .status(ex.statusCode)
@@ -33,7 +33,7 @@ class ApplicationAdvice {
 
     @ExceptionHandler(Exception::class)
     fun handleGeneralException(ex: Exception, exchange: ServerWebExchange): Flow<ResponseEntity<ServerExceptionResponse>> {
-        println("General Exception occurred: ${ex.message}, Stacktrace: ${ex.stackTraceToString()}")
+        println("예기치 않은 오류가 발생했습니다: ${ex.message}, Stacktrace: ${ex.stackTraceToString()}")
         return flowOf(
             ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

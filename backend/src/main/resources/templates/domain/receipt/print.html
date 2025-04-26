@@ -1,6 +1,9 @@
 <html layout:decorate="~{global/userLayout}">
 <head>
-    <title>대기열 상세보기</title>
+    <title>영수증 생성기</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <style type="text/css">
         .receipt-container {
             max-width: 400px;
@@ -92,6 +95,12 @@
             const addItemBtn = document.getElementById('addItemBtn');
             const itemsContainer = document.getElementById('itemsContainer');
             const form = document.getElementById('receiptForm');
+
+            // 폼 제출 이벤트 디버깅
+            form.addEventListener('submit', function(event) {
+                console.log('Form submitting with POST to /receipts/generate');
+                console.log('Form data:', new FormData(form));
+            });
 
             // 항목 추가
             addItemBtn.addEventListener('click', function() {
