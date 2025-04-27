@@ -1,6 +1,7 @@
 package com.docqueue.domain.receipt.controller
 
 import com.docqueue.domain.receipt.dto.ReceiptForm
+import com.docqueue.domain.receipt.dto.ReceiptOutcome
 import com.docqueue.domain.receipt.entity.Receipt
 import com.docqueue.domain.receipt.entity.ReceiptItem
 import com.docqueue.domain.receipt.entity.ReceiptPrintLog
@@ -64,7 +65,8 @@ class ReceiptController(
 
     @PostMapping("/generate")
     suspend fun generateReceipt(
-        @ModelAttribute receiptForm: ReceiptForm
+        @ModelAttribute receiptForm: ReceiptForm,
+        @AuthenticationPrincipal userDetails: UserDetails?
     ): ResponseEntity<Any> {
         logger.info("POST /receipts/generate 요청을 받음, 폼 데이터: $receiptForm")
         try {
@@ -80,29 +82,30 @@ class ReceiptController(
                 cashAmount = receiptForm.cashAmount,
                 changeAmount = receiptForm.changeAmount
             )
-            val outcome = receiptService.generateAndSaveReceipt(receipt)
+
+            val userId = userDetails?.username
+            val outcome = receiptService.generateAndSaveReceipt(receipt, userId)
             return when (outcome) {
-                is ReceiptService.ReceiptOutcome.Success -> {
-                    val (pdfContent, metadata) = outcome.output
-                    logger.info("영수증 생성 성공, 파일명: ${metadata.fileName}")
-                    val resource = ByteArrayResource(pdfContent)
+                is ReceiptOutcome.Success -> {
+                    val output = outcome.output
+                    logger.info("영수증 생성 성공, 파일명: ${output.metadata.fileName}, 로그 저장됨: ${output.printLog.receiptId}")
+                    val resource = ByteArrayResource(output.content)
                     val headers = HttpHeaders()
-                    val encodedFileName = URLEncoder.encode(metadata.fileName, StandardCharsets.UTF_8.toString())
+                    val encodedFileName = URLEncoder.encode(output.metadata.fileName, StandardCharsets.UTF_8.toString())
                         .replace("+", "%20")
-                    headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${metadata.fileName}\"; filename*=UTF-8''${encodedFileName}")
+                    headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${output.metadata.fileName}\"; filename*=UTF-8''${encodedFileName}")
                     ResponseEntity.ok()
                         .headers(headers)
-                        .contentLength(pdfContent.size.toLong())
+                        .contentLength(output.content.size.toLong())
                         .contentType(MediaType.APPLICATION_PDF)
                         .body(resource)
                 }
-                is ReceiptService.ReceiptOutcome.Failure -> {
+                is ReceiptOutcome.Failure -> {
                     logger.error("PDF 생성 실패: ${outcome.error.message ?: "알 수 없는 오류"}", outcome.error)
                     ResponseEntity.status(500)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(mapOf("error" to "PDF 생성 중 오류 발생: ${outcome.error.message ?: "알 수 없는 오류"}"))
                 }
-                // else 분기 추가는 필요 없음; sealed interface이므로 모든 경우 처리됨
             }
         } catch (e: Exception) {
             logger.error("영수증 생성 요청 처리 중 오류 발생: ${e.message ?: "알 수 없는 오류"}", e)
@@ -119,7 +122,7 @@ class ReceiptController(
         @AuthenticationPrincipal userDetails: UserDetails?
     ): String {
         val userId = userDetails?.username ?: "anonymous"
-        val logs = improvedReceiptService.getReceiptLogsByUser(userId).toList()
+        val logs = receiptService.getReceiptLogsByUser(userId).toList()
         model.addAttribute("logs", logs)
         return "receipts/logs"
     }
@@ -132,7 +135,7 @@ class ReceiptController(
     ): List<ReceiptPrintLog> {
         val start = LocalDateTime.of(date, LocalTime.MIN)
         val end = LocalDateTime.of(date, LocalTime.MAX)
-        return improvedReceiptService.getReceiptLogsByDateRange(start, end).toList()
+        return receiptService.getReceiptLogsByDateRange(start, end).toList()
     }
 
     // 기간별 로그 조회 API
@@ -144,6 +147,6 @@ class ReceiptController(
     ): List<ReceiptPrintLog> {
         val start = LocalDateTime.of(startDate, LocalTime.MIN)
         val end = LocalDateTime.of(endDate, LocalTime.MAX)
-        return improvedReceiptService.getReceiptLogsByDateRange(start, end).toList()
+        return receiptService.getReceiptLogsByDateRange(start, end).toList()
     }
 }
