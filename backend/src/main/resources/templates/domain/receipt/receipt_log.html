@@ -144,7 +144,7 @@
                                 return;
                             }
                             return response.json().then(data => {
-                                throw new Error(data.error || '다운로드 실패');
+                                throw new Error(`${data.code}: ${data.reason}`);
                             });
                         }
                         const disposition = response.headers.get('Content-Disposition');

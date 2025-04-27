@@ -7,8 +7,7 @@ import com.docqueue.domain.receipt.entity.ReceiptItem
 import com.docqueue.domain.receipt.entity.ReceiptPrintLog
 import com.docqueue.domain.receipt.service.ReceiptService
 import com.docqueue.global.exception.ApplicationException
-import com.docqueue.global.exception.ErrorCode
-import com.docqueue.global.exception.ServerExceptionResponse
+import java.util.UUID
 import kotlinx.coroutines.flow.toList
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
@@ -125,8 +124,17 @@ class ReceiptController(
         model: Model,
         @AuthenticationPrincipal userDetails: UserDetails?
     ): String {
+        logger.info("GET /receipts/logs 요청, userId={}", userDetails?.username ?: "Anonymous")
+        /*val userId = userDetails?.username ?: throw ApplicationException(
+            httpStatus = HttpStatus.UNAUTHORIZED,
+            code = "AUTH-0001",
+            reason = "User must be authenticated to view receipt logs"
+        )*/
+
         val userId = userDetails?.username ?: "Anonymous"
-        val logs = receiptService.getReceiptLogsByUser(userId).toList()
+        logger.info("GET /receipts/logs 요청, userId={}", userId)
+
+        val logs = receiptService.getReceiptLogsByUser(userId)
         model.addAttribute("logs", logs)
         return "domain/receipt/receipt_log"
     }
@@ -154,19 +162,22 @@ class ReceiptController(
         return receiptService.getReceiptLogsByDateRange(start, end).toList()
     }
 
+
     @GetMapping("/download/{id}")
     suspend fun downloadReceipt(
-        @PathVariable id: Long,
+        @PathVariable id: String,
         @AuthenticationPrincipal userDetails: UserDetails?
     ): ResponseEntity<Resource> {
-        logger.info("GET /receipts/download/{} 요청을 받음", id)
+        logger.info("GET /receipts/download/{} 요청, userId={}", id, userDetails?.username ?: "Anonymous")
         val userId = userDetails?.username ?: "Anonymous"
+
         val log = receiptService.getReceiptLogByIdAndUser(id, userId)
             ?: throw ApplicationException(
                 httpStatus = HttpStatus.NOT_FOUND,
                 code = "RECEIPT-0002",
                 reason = "Receipt log with id $id not found for user $userId"
             )
+
         val filePath = Paths.get(log.filePath)
         if (!Files.exists(filePath)) {
             logger.error("파일이 존재하지 않습니다: {}", log.filePath)
@@ -176,12 +187,14 @@ class ReceiptController(
                 reason = "File not found at ${log.filePath}"
             )
         }
+
         val resource = UrlResource(filePath.toUri())
         val encodedFileName = URLEncoder.encode(log.fileName, StandardCharsets.UTF_8.toString())
             .replace("+", "%20")
         val headers = HttpHeaders()
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${log.fileName}\"; filename*=UTF-8''${encodedFileName}")
         headers.contentType = MediaType.APPLICATION_PDF
+
         return ResponseEntity.ok()
             .headers(headers)
             .contentLength(Files.size(filePath))

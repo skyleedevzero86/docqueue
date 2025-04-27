@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Repository
 interface ReceiptPrintLogRepository : CoroutineCrudRepository<ReceiptPrintLog, String> {

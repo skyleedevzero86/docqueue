@@ -8,7 +8,7 @@ import java.util.*
 @Table("receipt_print_logs")
 data class ReceiptPrintLog(
     @Id
-    val id: Long? = null,
+    val id: String? = null,
     val receiptId: String,
     val fileName: String,
     val filePath: String,
