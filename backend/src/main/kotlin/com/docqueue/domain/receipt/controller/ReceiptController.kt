@@ -3,30 +3,36 @@ package com.docqueue.domain.receipt.controller
 import com.docqueue.domain.receipt.dto.ReceiptForm
 import com.docqueue.domain.receipt.entity.Receipt
 import com.docqueue.domain.receipt.entity.ReceiptItem
+import com.docqueue.domain.receipt.entity.ReceiptPrintLog
+import com.docqueue.domain.receipt.service.ImprovedReceiptService
 import com.docqueue.domain.receipt.service.ReceiptService
+import kotlinx.coroutines.flow.toList
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ByteArrayResource
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.ModelAttribute
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.*
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Controller
 @RequestMapping("/receipts")
 class ReceiptController(
-    private val receiptService: ReceiptService
+    private val receiptService: ReceiptService,
+    private val improvedReceiptService: ImprovedReceiptService
 ) {
     private val logger = LoggerFactory.getLogger(ReceiptController::class.java)
 
-    @GetMapping
+    @GetMapping("/print")
     fun showReceiptForm(model: Model): String {
         logger.info("GET /receipts 요청을 받음, 영수증 생성 폼 렌더링")
         // 기본 ReceiptForm 객체 추가
@@ -96,6 +102,7 @@ class ReceiptController(
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(mapOf("error" to "PDF 생성 중 오류 발생: ${outcome.error.message ?: "알 수 없는 오류"}"))
                 }
+                // else 분기 추가는 필요 없음; sealed interface이므로 모든 경우 처리됨
             }
         } catch (e: Exception) {
             logger.error("영수증 생성 요청 처리 중 오류 발생: ${e.message ?: "알 수 없는 오류"}", e)
@@ -103,5 +110,40 @@ class ReceiptController(
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(mapOf("error" to "서버 내부 오류: ${e.message ?: "알 수 없는 오류"}"))
         }
+    }
+
+    // 영수증 로그 페이지
+    @GetMapping("/logs")
+    suspend fun showLogsPage(
+        model: Model,
+        @AuthenticationPrincipal userDetails: UserDetails?
+    ): String {
+        val userId = userDetails?.username ?: "anonymous"
+        val logs = improvedReceiptService.getReceiptLogsByUser(userId).toList()
+        model.addAttribute("logs", logs)
+        return "receipts/logs"
+    }
+
+    // 날짜별 로그 조회 API
+    @GetMapping("/by-date", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @ResponseBody
+    suspend fun getLogsByDate(
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) date: LocalDate
+    ): List<ReceiptPrintLog> {
+        val start = LocalDateTime.of(date, LocalTime.MIN)
+        val end = LocalDateTime.of(date, LocalTime.MAX)
+        return improvedReceiptService.getReceiptLogsByDateRange(start, end).toList()
+    }
+
+    // 기간별 로그 조회 API
+    @GetMapping("/by-date-range", produces = [MediaType.APPLICATION_JSON_VALUE])
+    @ResponseBody
+    suspend fun getLogsByDateRange(
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate
+    ): List<ReceiptPrintLog> {
+        val start = LocalDateTime.of(startDate, LocalTime.MIN)
+        val end = LocalDateTime.of(endDate, LocalTime.MAX)
+        return improvedReceiptService.getReceiptLogsByDateRange(start, end).toList()
     }
 }

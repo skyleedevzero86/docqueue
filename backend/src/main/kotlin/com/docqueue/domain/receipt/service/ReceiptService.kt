@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @Service
 class ReceiptService(
@@ -25,11 +26,12 @@ class ReceiptService(
     }
 
     suspend fun generateAndSaveReceipt(receipt: Receipt): ReceiptOutcome = withContext(Dispatchers.IO) {
+        val receiptId = UUID.randomUUID().toString()
         val fileName = "영수증_${receipt.date.format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))}.pdf"
         val createdAt = Instant.now()
 
         runCatching {
-            pdfDocumentCreator.createPdfDocument(receipt)
+            pdfDocumentCreator.createPdfDocument(receipt, receiptId).getOrThrow()
                 .let { content ->
                     pdfSaver.savePdf(content, fileName)
                         .let { path ->
