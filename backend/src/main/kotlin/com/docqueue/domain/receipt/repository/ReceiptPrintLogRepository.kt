@@ -10,4 +10,5 @@ import java.time.LocalDateTime
 interface ReceiptPrintLogRepository : CoroutineCrudRepository<ReceiptPrintLog, String> {
     fun findByPrintedAtBetween(start: LocalDateTime, end: LocalDateTime): Flow<ReceiptPrintLog>
     fun findByUserId(userId: String): Flow<ReceiptPrintLog>
+    suspend fun findByIdAndUserId(id: String, userId: String): ReceiptPrintLog?
 }

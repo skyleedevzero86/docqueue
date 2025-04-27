@@ -25,7 +25,6 @@ class ReceiptService(
     private val pdfSaver: PdfSaver,
     private val receiptPrintLogRepository: ReceiptPrintLogRepository
 ) {
-
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     @Transactional
@@ -37,11 +36,13 @@ class ReceiptService(
         runCatching {
             val content = pdfDocumentCreator.createPdfDocument(receipt, receiptId).getOrThrow()
             val filePath = pdfSaver.savePdf(content, fileName)
+            val effectiveUserId = userId ?: "Anonymous"
             val printLog = ReceiptPrintLog(
+                id = null, // 데이터베이스에서 자동 생성
                 receiptId = receiptId,
                 fileName = fileName,
                 filePath = filePath.toString(),
-                userId = userId,
+                userId = effectiveUserId,
                 printedAt = LocalDateTime.now()
             )
             val savedLog = receiptPrintLogRepository.save(printLog)
@@ -73,5 +74,9 @@ class ReceiptService(
 
     suspend fun getReceiptLogsByDateRange(start: LocalDateTime, end: LocalDateTime): Flow<ReceiptPrintLog> {
         return receiptPrintLogRepository.findByPrintedAtBetween(start, end)
+    }
+
+    suspend fun getReceiptLogByIdAndUser(id: Long, userId: String): ReceiptPrintLog? {
+        return receiptPrintLogRepository.findByIdAndUserId(id, userId)
     }
 }
