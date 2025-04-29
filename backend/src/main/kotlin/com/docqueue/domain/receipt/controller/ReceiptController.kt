@@ -7,6 +7,7 @@ import com.docqueue.domain.receipt.entity.ReceiptItem
 import com.docqueue.domain.receipt.entity.ReceiptPrintLog
 import com.docqueue.domain.receipt.service.ReceiptService
 import com.docqueue.global.exception.ApplicationException
+import com.docqueue.global.exception.ErrorCode
 import java.util.UUID
 import kotlinx.coroutines.flow.toList
 import org.slf4j.LoggerFactory
@@ -109,11 +110,7 @@ class ReceiptController(
             }
             is ReceiptOutcome.Failure -> {
                 logger.error("PDF 생성 실패: ${outcome.error.message ?: "알 수 없는 오류"}", outcome.error)
-                throw ApplicationException(
-                    httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
-                    code = "RECEIPT-0001",
-                    reason = "PDF 생성 실패: ${outcome.error.message ?: "알 수 없는 오류"}"
-                )
+                throw ErrorCode.RECEIPT_PDF_GENERATION_FAILED.build(outcome.error.message)
             }
         }
     }

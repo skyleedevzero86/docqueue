@@ -16,11 +16,11 @@ class SecurityConfig {
             .authorizeExchange { exchanges ->
                 exchanges
                     .pathMatchers("/api/v1/queue/**","/waiting-room", "/login","/","/index","/home","/logout",
-                        "/images/**","/gen/images/**","/*.jpg", "/*.png", "/*.jpeg",
+                        "/images/**","/gen/images/**","/*.jpg", "/*.png", "/*.jpeg","/db/status",
                         "/receipts/**","/*.css","/*.js", "/*.gif","/*.svg","/*.woff","/*.woff2","/*.ttf", "/*.eot"
                     ).permitAll()
                     //.pathMatchers("/login","/","/index","/home","/logout", "/receipts", "/images/**", "/gen/images/**", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg", "/*.woff", "/*.woff2", "/*.ttf", "/*.eot").permitAll()
-                    //.pathMatchers("/receipts/**","/api/v1/queue/**", "/waiting-room").authenticated()
+                    //.pathMatchers("/receipts/**","/api/v1/queue/**","/db/status", "/waiting-room").authenticated()
                     .anyExchange().authenticated()
             }
             .formLogin { form ->

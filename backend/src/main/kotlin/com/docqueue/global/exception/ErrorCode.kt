@@ -19,4 +19,14 @@ enum class ErrorCode(
     );
 
     fun build(): ApplicationException = ApplicationException(httpStatus, code, reason)
+
+    fun build(extraMessage: String?): ApplicationException {
+        val fullReason = if (!extraMessage.isNullOrBlank()) {
+            "$reason: $extraMessage"
+        } else {
+            reason
+        }
+        return ApplicationException(httpStatus, code, fullReason)
+    }
+
 }

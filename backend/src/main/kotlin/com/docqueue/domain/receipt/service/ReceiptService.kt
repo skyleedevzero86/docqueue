@@ -38,14 +38,15 @@ class ReceiptService(
             val filePath = pdfSaver.savePdf(content, fileName)
             val effectiveUserId = userId ?: "Anonymous"
             val printLog = ReceiptPrintLog(
-                id = null, // 데이터베이스에서 자동 생성
                 receiptId = receiptId,
                 fileName = fileName,
                 filePath = filePath.toString(),
                 userId = effectiveUserId,
                 printedAt = LocalDateTime.now()
             )
+            logger.info("Saving printLog with id: ${printLog.id}, receiptId: ${printLog.receiptId}")
             val savedLog = receiptPrintLogRepository.save(printLog)
+            logger.info("Saved printLog: $savedLog")
             ReceiptOutput(
                 content = content,
                 metadata = ReceiptMetadata(fileName, createdAt, content.size.toLong()),
@@ -57,12 +58,7 @@ class ReceiptService(
                 ReceiptOutcome.Success(output)
             },
             onFailure = { error ->
-                when (error) {
-                    is ReceiptError.PdfGenerationError -> logger.error("PDF 생성 실패: ${error.message}", error)
-                    is ReceiptError.StorageError -> logger.error("PDF 저장 실패: ${error.message}", error)
-                    is ReceiptError.DatabaseError -> logger.error("로그 저장 실패: ${error.message}", error)
-                    else -> logger.error("영수증 처리 중 오류 발생: ${error.message}", error)
-                }
+                logger.error("영수증 처리 중 오류 발생: ${error.message}", error)
                 ReceiptOutcome.Failure(error)
             }
         )
@@ -76,7 +72,7 @@ class ReceiptService(
         return receiptPrintLogRepository.findByPrintedAtBetween(start, end)
     }
 
-    suspend fun getReceiptLogByIdAndUser(id: Long, userId: String): ReceiptPrintLog? {
+    suspend fun getReceiptLogByIdAndUser(id: String, userId: String): ReceiptPrintLog? {
         return receiptPrintLogRepository.findByIdAndUserId(id, userId)
     }
 }
