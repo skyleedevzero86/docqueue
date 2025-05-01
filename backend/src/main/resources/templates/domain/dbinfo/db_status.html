@@ -1,11 +1,11 @@
-<html layout:decorate="~{global/userLayout}">
+<html layout:decorate="~{global/userLayout}" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <h2>DB 상태 요약</h2>
-    <style type="text/css">
+    <title>DB 및 시스템 상태</title>
+    <style>
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
         th, td {
             padding: 10px;
@@ -15,19 +15,29 @@
         th {
             background-color: #f5f5f5;
         }
-        #chartContainer {
-            margin-top: 30px;
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 40px;
+        }
+        .pie-chart {
+            max-width: 400px;
+            margin-bottom: 40px;
+        }
+        .bar-chart {
+            width: 90%;
             height: 400px;
         }
     </style>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div layout:fragment="content" class="container mt-5">
     <h2>DB 상태 요약</h2>
 
-    <table border="1" class="table table-bordered table-hover">
-        <thead class="thead-dark">
+    <table class="table table-bordered table-hover">
+        <thead>
         <tr>
             <th>DB Name</th>
             <th>전체 크기 (MB)</th>
@@ -45,50 +55,69 @@
         </tbody>
     </table>
 
+    <h2>시스템 구성 요소 상태 (Actuator)</h2>
+
+    <table class="table table-bordered table-hover">
+        <thead>
+        <tr>
+            <th>컴포넌트</th>
+            <th>상태</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="entry : ${healthComponents}">
+            <td th:text="${entry.key}">Component</td>
+            <td th:text="${entry.value.status}">Status</td>
+        </tr>
+        </tbody>
+    </table>
+
     <div class="chart-container">
-        <canvas id="dbChart"></canvas>
+        <h3>DB 크기 요약 (막대그래프)</h3>
+        <div class="bar-chart">
+            <canvas id="dbChart"></canvas>
+        </div>
+
+        <h3>Actuator 구성 요소 상태 비율 (타원형 파이 차트)</h3>
+        <div class="pie-chart">
+            <canvas id="healthChart"></canvas>
+        </div>
     </div>
 
-    <script type="text/javascript" th:inline="javascript">
+    <script th:inline="javascript">
         /*<![CDATA[*/
-        document.addEventListener('DOMContentLoaded', function() {
-            // Thymeleaf에서 데이터 가져오기
+        document.addEventListener('DOMContentLoaded', function () {
             const dbData = /*[[${dbList}]]*/ [];
+            const healthComponents = /*[[${healthComponents}]]*/ {};
 
-            // 차트 데이터 준비
-            const labels = dbData.map(db => db.dbName);
-            const data = {
-                labels: labels,
-                datasets: [
-                    {
-                        label: '전체 크기 (MB)',
-                        data: dbData.map(db => db.dbSizeMb),
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)'
-                    },
-                    {
-                        label: '데이터 크기 (MB)',
-                        data: dbData.map(db => db.dataSizeMb),
-                        backgroundColor: 'rgba(255, 159, 64, 0.6)'
-                    },
-                    {
-                        label: '인덱스 크기 (MB)',
-                        data: dbData.map(db => db.indexSizeMb),
-                        backgroundColor: 'rgba(153, 102, 255, 0.6)'
-                    }
-                ]
-            };
-
-            // 차트 설정
-            const config = {
+            // DB 상태 차트 (막대그래프)
+            const ctxBar = document.getElementById('dbChart').getContext('2d');
+            new Chart(ctxBar, {
                 type: 'bar',
-                data: data,
+                data: {
+                    labels: dbData.map(db => db.dbName),
+                    datasets: [
+                        {
+                            label: '전체 크기 (MB)',
+                            data: dbData.map(db => db.dbSizeMb),
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                        },
+                        {
+                            label: '데이터 크기 (MB)',
+                            data: dbData.map(db => db.dataSizeMb),
+                            backgroundColor: 'rgba(255, 159, 64, 0.6)'
+                        },
+                        {
+                            label: '인덱스 크기 (MB)',
+                            data: dbData.map(db => db.indexSizeMb),
+                            backgroundColor: 'rgba(153, 102, 255, 0.6)'
+                        }
+                    ]
+                },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'top'
-                        },
                         title: {
                             display: true,
                             text: 'MariaDB 용량 분석'
@@ -104,14 +133,45 @@
                         }
                     }
                 }
-            };
+            });
 
-            // 차트 생성
-            const ctx = document.getElementById('dbChart').getContext('2d');
-            new Chart(ctx, config);
+            // Actuator 상태 파이차트 (타원형)
+            const ctxPie = document.getElementById('healthChart').getContext('2d');
+            const statusCount = {};
+            Object.values(healthComponents).forEach(comp => {
+                const status = comp.status || 'UNKNOWN';
+                statusCount[status] = (statusCount[status] || 0) + 1;
+            });
+
+            new Chart(ctxPie, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(statusCount),
+                    datasets: [{
+                        label: 'Component Status',
+                        data: Object.values(statusCount),
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(201, 203, 207, 0.6)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '시스템 컴포넌트 상태 분포'
+                        }
+                    }
+                }
+            });
         });
         /*]]>*/
     </script>
-    </div>
+</div>
 </body>
 </html>
