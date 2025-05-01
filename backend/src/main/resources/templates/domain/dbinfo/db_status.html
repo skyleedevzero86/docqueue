@@ -47,7 +47,7 @@
         </thead>
         <tbody>
         <tr th:each="db : ${dbList}">
-            <td th:text="${db.dbName}">DB명</td>
+            <td th:text="${db.dbName == 'msword' ? '대결시스템 DB' : '일반 DB'}">DB명</td>
             <td th:text="${db.dbSizeMb}">0</td>
             <td th:text="${db.dataSizeMb}">0</td>
             <td th:text="${db.indexSizeMb}">0</td>
@@ -67,7 +67,15 @@
         <tbody>
         <tr th:each="entry : ${healthComponents}">
             <td th:text="${entry.key}">Component</td>
-            <td th:text="${entry.value.status}">Status</td>
+            <td>
+              <span th:switch="${entry.value.status}">
+                <span th:case="'UP'">이상없음</span>
+                <span th:case="'DOWN'">확인 필요</span>
+                <span th:case="'OUT_OF_SERVICE'">점검 중</span>
+                <span th:case="'UNKNOWN'">알 수 없음</span>
+                <span th:case="*">기타</span>
+              </span>
+            </td>
         </tr>
         </tbody>
     </table>
@@ -120,7 +128,7 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: 'MariaDB 용량 분석'
+                            text: '대기열DB 용량 분석'
                         }
                     },
                     scales: {
@@ -135,28 +143,53 @@
                 }
             });
 
-            // Actuator 상태 파이차트 (타원형)
+            // Actuator 상태 파이차트 (컴포넌트별 상태 색상별 표시)
             const ctxPie = document.getElementById('healthChart').getContext('2d');
-            const statusCount = {};
-            Object.values(healthComponents).forEach(comp => {
+
+// 상태별 색상 맵
+            const statusColorMap = {
+                'UP': [
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(100, 200, 150, 0.6)',
+                    'rgba(0, 170, 200, 0.6)'
+                ],
+                'DOWN': 'rgba(255, 99, 132, 0.8)',
+                'OUT_OF_SERVICE': 'rgba(255, 69, 58, 0.8)',
+                'UNKNOWN': 'rgba(255, 140, 0, 0.8)',
+                'DEFAULT': 'rgba(200, 200, 200, 0.6)'
+            };
+
+            const labels = [];
+            const data = [];
+            const backgroundColors = [];
+
+            let upColorIndex = 0;
+
+            Object.entries(healthComponents).forEach(([key, comp]) => {
                 const status = comp.status || 'UNKNOWN';
-                statusCount[status] = (statusCount[status] || 0) + 1;
+                labels.push(`${key} (${status})`);
+                data.push(1); // 각 컴포넌트별 비율 표시
+
+                if (status === 'UP') {
+                    const colorList = statusColorMap['UP'];
+                    backgroundColors.push(colorList[upColorIndex % colorList.length]);
+                    upColorIndex++;
+                } else {
+                    backgroundColors.push(statusColorMap[status] || statusColorMap['DEFAULT']);
+                }
             });
 
             new Chart(ctxPie, {
                 type: 'pie',
                 data: {
-                    labels: Object.keys(statusCount),
+                    labels: labels,
                     datasets: [{
                         label: 'Component Status',
-                        data: Object.values(statusCount),
-                        backgroundColor: [
-                            'rgba(75, 192, 192, 0.6)',
-                            'rgba(255, 99, 132, 0.6)',
-                            'rgba(255, 206, 86, 0.6)',
-                            'rgba(54, 162, 235, 0.6)',
-                            'rgba(201, 203, 207, 0.6)'
-                        ]
+                        data: data,
+                        backgroundColor: backgroundColors
                     }]
                 },
                 options: {
@@ -165,10 +198,14 @@
                         title: {
                             display: true,
                             text: '시스템 컴포넌트 상태 분포'
+                        },
+                        legend: {
+                            position: 'bottom'
                         }
                     }
                 }
             });
+
         });
         /*]]>*/
     </script>
